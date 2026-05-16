@@ -1,6 +1,6 @@
 # Spring Boot API Audit Logger
 
-Library simpel untuk mencatat log audit (URL, HTTP Status, dan Response Body) secara otomatis pada endpoint yang dipasangi anotasi `@LogData`. Sudah mendukung proses asynchronous (`CompletableFuture`).
+Contoh java code untuk mencatat log audit (URL, HTTP Status, dan Response Body) secara otomatis pada endpoint yang dipasangi anotasi `@LogData`. Sudah mendukung proses asynchronous (`CompletableFuture`).
 
 ## 🚀 Fitur Utama
 - **Support Async**: Log body tetap aman tercatat walaupun menggunakan `CompletableFuture`.
