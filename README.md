@@ -1,4 +1,4 @@
-# Spring Boot API Audit Logger
+# Spring AOP & Filter Untuk Audit Logger
 
 Contoh Spring AOP dan penggunaan Filter di java code untuk mencatat log audit (URL, HTTP Status, dan Response Body) secara otomatis pada endpoint yang dipasangi anotasi `@LogData`. Sudah mendukung proses asynchronous (`CompletableFuture`).
 
