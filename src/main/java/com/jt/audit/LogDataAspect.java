@@ -1,7 +1,6 @@
 package com.jt.audit;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -37,52 +36,58 @@ public class LogDataAspect {
 
         StandardEvaluationContext context = new StandardEvaluationContext();
 
-        // 1. DAFTARKAN PARAMETER METHOD (Termasuk jika ada HttpServletRequest di argumen)
         String[] paramNames = discoverer.getParameterNames(method);
         if (paramNames != null) {
             for (int i = 0; i < paramNames.length; i++) {
                 context.setVariable(paramNames[i], args[i]);
-
-                // Backup plan: jika parameternya bertipe HttpServletRequest tapi namanya bukan 'request'
-                if (args[i] instanceof HttpServletRequest) {
-                    context.setVariable("request", args[i]);
+                if (args[i] instanceof HttpServletRequest servletRequest) {
+                    context.setVariable("request", servletRequest);
                 }
             }
         }
 
-        // 2. BACKUP GLOBAL CONTEXT (Jika method TIDAK punya parameter HttpServletRequest)
-        HttpServletRequest request = null;
-        if (context.lookupVariable("request") == null) {
-            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = resolveRequest(context);
+        if (request == null) {
+            ServletRequestAttributes attributes =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attributes != null) {
-                context.setVariable("request", attributes.getRequest());
                 request = attributes.getRequest();
+                context.setVariable("request", request);
             }
         }
 
-        // 3. Ambil traceId menggunakan SpEL
         String traceId = parseSpel(logData.traceId(), context);
         String actionType = parseSpel(logData.actionType(), context);
 
-        // 4. Simpan ke Request Attribute jika objek request berhasil ditemukan
         if (request != null) {
             request.setAttribute("auditTraceId", traceId != null ? traceId : "");
             request.setAttribute("auditActionType", actionType != null ? actionType : "");
         }
 
-        // 4. Simpan actionType ke MDC agar bisa dibaca oleh Filter nanti
-        if (traceId != null) MDC.put("traceId", traceId);
-        if (actionType != null) MDC.put("actionType", actionType);
-
+        if (traceId != null) {
+            MDC.put("traceId", traceId);
+        }
+        if (actionType != null) {
+            MDC.put("actionType", actionType);
+        }
 
         log.info("correlation-id:{}", MDC.get("traceId"));
         log.info("actionType:{}", MDC.get("actionType"));
 
         try {
-            // 3. Jalankan method Controller asli
             return joinPoint.proceed();
         } finally {
+            MDC.remove("traceId");
+            MDC.remove("actionType");
         }
+    }
+
+    private HttpServletRequest resolveRequest(StandardEvaluationContext context) {
+        Object requestVar = context.lookupVariable("request");
+        if (requestVar instanceof HttpServletRequest servletRequest) {
+            return servletRequest;
+        }
+        return null;
     }
 
     private String parseSpel(String expressionStr, EvaluationContext context) {
@@ -93,5 +98,4 @@ public class LogDataAspect {
         }
         return expressionStr;
     }
-
 }

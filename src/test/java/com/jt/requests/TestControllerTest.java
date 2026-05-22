@@ -4,7 +4,6 @@ import com.hackerrank.test.utility.Order;
 import com.hackerrank.test.utility.OrderedTestRunner;
 import com.hackerrank.test.utility.TestWatchman;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -17,8 +16,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.MvcResult;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(OrderedTestRunner.class)
 @SpringBootTest
@@ -46,57 +50,42 @@ public class TestControllerTest {
         TestWatchman.watchman.createReport(TestControllerTest.class);
     }
 
-    /**
-     *
-     * @throws Exception
-     *
-     * It tests response to be "Hello Java!"
-     */
     @Test
     @Order(1)
     public void greetJava() throws Exception {
-        String response = mockMvc.perform(MockMvcRequestBuilders.get("/Java"))
-            .andExpect(MockMvcResultMatchers.status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+        MvcResult asyncResult = mockMvc.perform(get("/Java"))
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
 
-        Assert.assertEquals(response, "Hello Java!");
+        mockMvc.perform(asyncDispatch(asyncResult))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Hello Java!"));
     }
 
-    /**
-     *
-     * @throws Exception
-     *
-     * It tests response to be "Hello Spring!"
-     */
     @Test
     @Order(2)
     public void greetSpring() throws Exception {
-        String response = mockMvc.perform(MockMvcRequestBuilders.get("/Spring"))
-            .andExpect(MockMvcResultMatchers.status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+        MvcResult asyncResult = mockMvc.perform(get("/Spring"))
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
 
-        Assert.assertEquals(response, "Hello Spring!");
+        mockMvc.perform(asyncDispatch(asyncResult))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Hello Spring!"));
     }
 
-    /**
-     *
-     * @throws Exception
-     *
-     * It tests response to be "Hello RodJohnson!"
-     */
     @Test
     @Order(3)
     public void greetRodJohnson() throws Exception {
-        String response = mockMvc.perform(MockMvcRequestBuilders.get("/RodJohnson"))
-            .andExpect(MockMvcResultMatchers.status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+        MvcResult asyncResult = mockMvc.perform(get("/RodJohnson"))
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
 
-        Assert.assertEquals(response, "Hello RodJohnson!");
+        mockMvc.perform(asyncDispatch(asyncResult))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Hello RodJohnson!"));
     }
 }
